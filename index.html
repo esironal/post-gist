@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<!-- Made with Placebo: a bare minimal HTML+CSS boilerplate -->
+
+<html lang="en" dir="ltr">
+
+	<head>
+
+		<!-- Meta tags -->
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<!-- Page title -->
+		<title>GistBin - you heard it!</title>
+
+		<!-- And favicon -->
+		<link rel="icon" type="image/png" href="" />
+
+		<!-- Style sheets -->
+		<link rel="stylesheet" href="css/normalize.css" />
+		<link rel="stylesheet" href="css/foundation.css" />
+		<style>
+		header { text-align: center; }
+		header h1 {
+			color: #555;
+			margin: 3rem auto 0;
+			font-size: 8rem;
+			font-family: "Boogaloo";
+			font-weight: normal;
+		}
+		header h3.subheader {
+			margin: -2rem auto 2rem;
+			font-size: 2rem;
+			font-family: "Patrick Hand SC";
+			text-decoration: underline;
+		}
+		#status a {
+			padding: 2px 8px;
+			color: rgb(34, 102, 51);
+			border-radius: 4px 4px 4px 4px;
+			background-color: rgba(255, 255, 255, 0.33);
+		}
+		#output .subheader { color: #666; }
+		#credits { margin-bottom: 2rem; }
+		</style>
+
+		<!-- Add web fonts -->
+		<link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Boogaloo|Patrick+Hand+SC' />
+
+		<!-- Polyfil for IE -->
+		<!--[if lt IE 9]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+
+	</head>
+
+	<body>
+
+		<header>
+			<h1>GistBin</h1>
+			<h3 class="subheader">Anonymous gists made easy</h3>
+		</header>
+
+		<section id="input" class="row collapse">
+			<div class="small-3 large-3 columns">
+				<span class="prefix">Description:</span>
+			</div>
+			<div class="small-9 large-9 columns">
+				<input type="text" id="description" placeholder="What is this Gist all about?">
+			</div>
+			<div class="small-3 large-3 columns">
+				<span class="prefix">Filename:</span>
+			</div>
+			<div class="small-9 large-9 columns">
+				<input type="text" id="filename" placeholder="e.g. README.md">
+			</div>
+			<div class="small-12 large-8 columns">
+				<textarea id="content" placeholder="Here be teh codez!" style="height: auto;"></textarea>
+			</div>
+			<button class="small-12 large-3 columns large button">Get Gist!</button>
+		</section>
+
+		<section id="output" class="row" style="display: none;">
+			<div id="status" class="alert-box"></div>
+			<div id="response" class="large-12 columns panel">
+				<h3 class="subheader">Server response (prettified JSON):</h3>
+				<hr />
+				<pre id="gist-content"></pre>
+			</div>
+		</section>
+
+		<hr class="row" /><br />
+
+		<section id="credits" class="row">
+			GistBin is a proof-of-concept toy-prototype by
+			<a href="https://twitter.com/Debloper" target="_blank">@Debloper</a>
+			&mdash; you can
+			<a href="https://github.com/debloper/gistbin" target="_blank">fork it</a>
+			on GitHub under
+			<a href="http://en.wikipedia.org/wiki/WTFPL#Terms">WTFPL</a>.
+		</section>
+
+		<!-- Lazy Loadable JS -->
+		<script src="js/jquery.js"></script>
+		<script src="js/foundation.js"></script>
+		<script>
+			$(document).foundation();
+
+			$("button").click(function(){
+				var data = {
+					"description": $("#description").val(),
+					"public": true,
+					"files": {}
+				};
+				data.files[$("#filename").val().toString()] = {
+					"content": $("#content").val()
+				};
+
+				$.ajax({
+					type: "POST",
+					dataType: 'json',
+					url: "https://api.github.com/gists",
+					data: JSON.stringify(data)
+				}).done(function( response ) {
+
+					// Let's stringify the response for further use
+					var responseString = JSON.stringify(response, null, "\t");
+
+					// Yes, Array concatenation is much faster
+					// than vanilla string concatenation...
+					var successMessage = [
+						'Whoa! You made it... your gist ',
+						'<a href="',
+						response.html_url,
+						'" target="_blank">',
+						response.html_url,
+						'</a> has been created successfully!'
+					].join("");
+
+					// DOM-manipulation time!
+					$("#status").addClass("success").html(successMessage);
+					$("#gist-content").text(responseString);
+					$("#output").show();
+
+				}).fail(function( response ) {
+					$("#status").addClass("alert").text("Nope! Something went wrong...");
+					$("#gist-content").text('"responseText": ' + response.responseText);
+					$("#output").show();
+				});
+			});
+		</script>
+
+	</body>
+
+</html>
